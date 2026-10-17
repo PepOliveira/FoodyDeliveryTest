@@ -4,6 +4,16 @@
 
 Versão simplificada de um sistema de rastreamento de pedidos de delivery: cadastro e login, criação de pedidos, acompanhamento por status e uma lista que se atualiza sozinha.
 
+## Demo online
+
+| | |
+|---|---|
+| Aplicação | https://foody-delivery-test.vercel.app |
+| API (Swagger) | https://foody-api-thm8.onrender.com/swagger-ui.html |
+| Usuário de teste | `demo@foody.com` / `demo123` |
+
+O back-end roda no plano gratuito do Render: o primeiro acesso depois de um período parado pode levar cerca de 1 minuto para acordar (a tela avisa), e os dados de teste são reiniciados nesses casos. Para rodar tudo na sua máquina, veja [Como rodar](#como-rodar).
+
 | Login | Pedidos |
 |---|---|
 | ![Login](docs/screenshots/login.png) | ![Pedidos](docs/screenshots/orders.png) |
@@ -12,6 +22,7 @@ Versão simplificada de um sistema de rastreamento de pedidos de delivery: cadas
 
 ## Sumário
 
+- [Demo online](#demo-online)
 - [Stack](#stack)
 - [Como rodar](#como-rodar)
 - [Usuário de teste](#usuário-de-teste)
