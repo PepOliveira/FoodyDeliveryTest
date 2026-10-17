@@ -39,6 +39,7 @@ public class Order {
 
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "order_items", joinColumns = @JoinColumn(name = "order_id"))
+    @BatchSize(size = 50)
     private List<OrderItem> items = new ArrayList<>();
 
     @Enumerated(EnumType.STRING)

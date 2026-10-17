@@ -663,6 +663,11 @@ select:focus {
   align-items: stretch;
   grid-auto-rows: 1fr;
 }
+.load-more {
+  display: flex;
+  justify-content: center;
+  margin-top: 24px;
+}
 .order {
   display: flex;
   flex-direction: column;

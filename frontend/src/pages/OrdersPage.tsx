@@ -1,13 +1,15 @@
 import { useEffect, useMemo, useState } from 'react'
-import { ordersApi, type Order, type OrderStatus } from '../api/orders'
+import { ordersApi, type Order, type OrderStatus, type OrderSummary } from '../api/orders'
 import { getErrorMessage } from '../api/client'
 import { ConfirmDialog } from '../components/ConfirmDialog'
 import { LiveIndicator } from '../components/LiveIndicator'
 import { NewOrderModal } from '../components/NewOrderModal'
 import { OrderCard } from '../components/OrderCard'
 import { PlusIcon, SearchIcon } from '../components/icons'
+import { useDebouncedValue } from '../hooks/useDebouncedValue'
 import { useNow } from '../hooks/useNow'
-import { STATUS_LABEL, isInProgress } from '../utils/order'
+import { useOrders } from '../hooks/useOrders'
+import { IN_PROGRESS, STATUS_LABEL } from '../utils/order'
 
 type Filter = 'ANDAMENTO' | OrderStatus | 'TODOS'
 
@@ -29,77 +31,48 @@ const FILTER_LABEL: Record<Filter, string> = {
 
 const POLL_INTERVAL_MS = 10_000
 const CLOCK_INTERVAL_MS = 30_000
+const SEARCH_DEBOUNCE_MS = 300
 
-function matchesSearch(order: Order, query: string): boolean {
-  const text = query.trim().toLowerCase()
-  if (!text) return true
-  const digits = text.replace(/\D/g, '')
-  const orderNumber = text.replace(/^#/, '')
-  return (
-    String(order.id) === orderNumber ||
-    order.customerName.toLowerCase().includes(text) ||
-    (digits.length > 0 && (order.customerPhone ?? '').replace(/\D/g, '').includes(digits))
-  )
+function statusesFor(filter: Filter): OrderStatus[] {
+  if (filter === 'ANDAMENTO') return IN_PROGRESS
+  if (filter === 'TODOS') return []
+  return [filter]
 }
 
-function matchesFilter(order: Order, filter: Filter): boolean {
-  if (filter === 'TODOS') return true
-  if (filter === 'ANDAMENTO') return isInProgress(order.status)
-  return order.status === filter
+function countFor(filter: Filter, summary: OrderSummary | null): number {
+  if (!summary) return 0
+  const statuses = filter === 'TODOS' ? (Object.keys(summary) as OrderStatus[]) : statusesFor(filter)
+  return statuses.reduce((total, status) => total + (summary[status] ?? 0), 0)
 }
 
 export function OrdersPage() {
-  const [orders, setOrders] = useState<Order[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
   const [filter, setFilter] = useState<Filter>('ANDAMENTO')
   const [search, setSearch] = useState('')
   const [showForm, setShowForm] = useState(false)
   const [updatingId, setUpdatingId] = useState<number | null>(null)
   const [cancelTarget, setCancelTarget] = useState<Order | null>(null)
+  const [actionError, setActionError] = useState<string | null>(null)
   const now = useNow(CLOCK_INTERVAL_MS)
+  const query = useDebouncedValue(search.trim(), SEARCH_DEBOUNCE_MS)
+  const statuses = useMemo(() => statusesFor(filter), [filter])
 
-  useEffect(() => {
-    let active = true
-    ordersApi
-      .list()
-      .then((data) => active && setOrders(data))
-      .catch((err) => active && setError(getErrorMessage(err)))
-      .finally(() => active && setLoading(false))
-    return () => {
-      active = false
-    }
-  }, [])
+  const { orders, summary, hasMore, loading, loadingMore, error, refresh, loadMore } = useOrders({ statuses, query })
 
   useEffect(() => {
     const id = window.setInterval(() => {
-      if (document.hidden) return
-      ordersApi
-        .list()
-        .then(setOrders)
-        .catch(() => undefined)
+      if (!document.hidden) void refresh()
     }, POLL_INTERVAL_MS)
     return () => window.clearInterval(id)
-  }, [])
-
-  const searched = useMemo(() => orders.filter((o) => matchesSearch(o, search)), [orders, search])
-
-  const counts = useMemo(() => {
-    const map = new Map<Filter, number>()
-    FILTERS.forEach((f) => map.set(f, searched.filter((o) => matchesFilter(o, f)).length))
-    return map
-  }, [searched])
-
-  const visible = useMemo(() => searched.filter((o) => matchesFilter(o, filter)), [searched, filter])
+  }, [refresh])
 
   async function changeStatus(order: Order, status: OrderStatus) {
     setUpdatingId(order.id)
-    setError(null)
+    setActionError(null)
     try {
-      const updated = await ordersApi.updateStatus(order.id, status)
-      setOrders((prev) => prev.map((o) => (o.id === updated.id ? updated : o)))
+      await ordersApi.updateStatus(order.id, status)
+      await refresh()
     } catch (err) {
-      setError(getErrorMessage(err))
+      setActionError(getErrorMessage(err))
     } finally {
       setUpdatingId(null)
     }
@@ -112,24 +85,27 @@ export function OrdersPage() {
     await changeStatus(target, 'CANCELADO')
   }
 
-  function handleCreated(order: Order) {
-    setOrders((prev) => [order, ...prev])
-    setFilter('ANDAMENTO')
+  function handleCreated() {
     setShowForm(false)
+    setSearch('')
+    setFilter('ANDAMENTO')
+    void refresh()
   }
 
+  const totalOrders = countFor('TODOS', summary)
   const emptyTitle =
-    orders.length === 0
+    totalOrders === 0 && !query
       ? 'Nenhum pedido ainda'
-      : search.trim()
+      : query
         ? 'Nenhum pedido encontrado'
         : filter === 'ANDAMENTO'
           ? 'Nenhum pedido em andamento'
           : 'Nenhum pedido com esse status'
   const emptyHint =
-    orders.length === 0
+    totalOrders === 0 && !query
       ? 'Crie o primeiro pedido para começar o rastreamento.'
       : 'Tente outra busca ou outro filtro.'
+  const visibleError = actionError ?? error
 
   return (
     <>
@@ -165,33 +141,42 @@ export function OrdersPage() {
             className={`chip${filter === f ? ' is-active' : ''}`}
             onClick={() => setFilter(f)}
           >
-            {FILTER_LABEL[f]} <span className="chip__count">{counts.get(f) ?? 0}</span>
+            {FILTER_LABEL[f]} <span className="chip__count">{countFor(f, summary)}</span>
           </button>
         ))}
       </div>
 
-      {error && <div className="alert alert--error" role="alert">{error}</div>}
+      {visibleError && <div className="alert alert--error" role="alert">{visibleError}</div>}
 
-      {loading && orders.length === 0 ? (
+      {loading ? (
         <p className="state">Carregando pedidos...</p>
-      ) : visible.length === 0 ? (
+      ) : orders.length === 0 ? (
         <div className="state card">
           <h3>{emptyTitle}</h3>
           <p className="muted">{emptyHint}</p>
         </div>
       ) : (
-        <div className="orders">
-          {visible.map((order) => (
-            <OrderCard
-              key={order.id}
-              order={order}
-              now={now}
-              updating={updatingId === order.id}
-              onChangeStatus={changeStatus}
-              onCancel={setCancelTarget}
-            />
-          ))}
-        </div>
+        <>
+          <div className="orders">
+            {orders.map((order) => (
+              <OrderCard
+                key={order.id}
+                order={order}
+                now={now}
+                updating={updatingId === order.id}
+                onChangeStatus={changeStatus}
+                onCancel={setCancelTarget}
+              />
+            ))}
+          </div>
+          {hasMore && (
+            <div className="load-more">
+              <button type="button" className="btn btn--ghost" onClick={() => void loadMore()} disabled={loadingMore}>
+                {loadingMore ? 'Carregando...' : 'Carregar mais'}
+              </button>
+            </div>
+          )}
+        </>
       )}
 
       {showForm && <NewOrderModal onClose={() => setShowForm(false)} onCreated={handleCreated} />}

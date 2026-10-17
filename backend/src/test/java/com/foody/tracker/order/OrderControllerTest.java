@@ -17,6 +17,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -66,6 +67,7 @@ class OrderControllerTest {
         mvc.perform(post("/api/orders").header("Authorization", bearer)
                         .contentType(MediaType.APPLICATION_JSON).content(ORDER_BODY))
                 .andExpect(status().isCreated())
+                .andExpect(header().string("Location", org.hamcrest.Matchers.matchesPattern(".*/api/orders/\\d+")))
                 .andExpect(jsonPath("$.status").value("RECEBIDO"))
                 .andExpect(jsonPath("$.customerPhone").value("(11) 99999-0000"))
                 .andExpect(jsonPath("$.deliveryComplement").value("Apto 12, portao azul"))
@@ -109,7 +111,7 @@ class OrderControllerTest {
         long id = createOrder();
         mvc.perform(get("/api/orders").header("Authorization", bearer))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id").exists());
+                .andExpect(jsonPath("$.content[0].id").exists());
         mvc.perform(get("/api/orders/" + id).header("Authorization", bearer))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.customerName").value("Joao"));

@@ -37,8 +37,34 @@ export interface CreateOrderPayload {
   items: { name: string; quantity: number; unitPrice: number }[]
 }
 
+export interface PageResponse<T> {
+  content: T[]
+  page: number
+  size: number
+  totalElements: number
+  totalPages: number
+  last: boolean
+}
+
+export type OrderSummary = Record<OrderStatus, number>
+
+export interface ListParams {
+  statuses?: OrderStatus[]
+  q?: string
+  page?: number
+  size?: number
+}
+
 export const ordersApi = {
-  list: () => api.get<Order[]>('/orders').then((r) => r.data),
+  list: ({ statuses, q, page, size }: ListParams = {}) =>
+    api
+      .get<PageResponse<Order>>('/orders', {
+        params: { status: statuses, q: q || undefined, page, size },
+        paramsSerializer: { indexes: null },
+      })
+      .then((r) => r.data),
+  summary: (q?: string) =>
+    api.get<OrderSummary>('/orders/summary', { params: { q: q || undefined } }).then((r) => r.data),
   create: (payload: CreateOrderPayload) => api.post<Order>('/orders', payload).then((r) => r.data),
   updateStatus: (id: number, status: OrderStatus) =>
     api.patch<Order>(`/orders/${id}/status`, { status }).then((r) => r.data),
