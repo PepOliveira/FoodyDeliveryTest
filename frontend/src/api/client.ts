@@ -6,7 +6,8 @@ export const AUTH_EXPIRED_EVENT = 'foody:auth-expired'
 
 export interface ApiError {
   status: number
-  message: string
+  title: string
+  detail?: string
   fieldErrors?: Record<string, string> | null
 }
 
@@ -34,7 +35,7 @@ export function getErrorMessage(error: unknown): string {
     if (!error.response) return 'Não foi possível conectar ao servidor.'
     const data = error.response.data
     if (data?.fieldErrors) return Object.values(data.fieldErrors).join(' · ')
-    if (data?.message) return data.message
+    if (data?.detail) return data.detail
   }
   return 'Ocorreu um erro inesperado.'
 }

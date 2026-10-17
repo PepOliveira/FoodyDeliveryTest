@@ -16,6 +16,7 @@ import java.util.regex.Pattern;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -132,6 +133,16 @@ class OrderControllerTest {
         changeStatus(id, "CANCELADO").andExpect(status().isOk());
         changeStatus(id, "EM_PREPARO").andExpect(status().isConflict());
         changeStatus(id, "XPTO").andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void errorsFollowTheProblemDetailFormat() throws Exception {
+        mvc.perform(get("/api/orders/999999").header("Authorization", bearer))
+                .andExpect(status().isNotFound())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(jsonPath("$.status").value(404))
+                .andExpect(jsonPath("$.title").value("Not Found"))
+                .andExpect(jsonPath("$.detail").value("Order 999999 not found"));
     }
 
     @Test

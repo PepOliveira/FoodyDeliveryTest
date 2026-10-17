@@ -1,7 +1,7 @@
 package com.foody.tracker.common;
 
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.ProblemDetail;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -15,35 +15,38 @@ import java.util.Map;
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ApiError> handleValidation(MethodArgumentNotValidException ex) {
+    public ProblemDetail handleValidation(MethodArgumentNotValidException ex) {
         Map<String, String> fields = new LinkedHashMap<>();
         ex.getBindingResult().getFieldErrors()
                 .forEach(e -> fields.putIfAbsent(e.getField(), e.getDefaultMessage()));
-        return build(HttpStatus.BAD_REQUEST, "Validation failed", fields);
+        ProblemDetail problem = problem(HttpStatus.BAD_REQUEST, "Validation failed");
+        problem.setProperty("fieldErrors", fields);
+        return problem;
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ResponseEntity<ApiError> handleUnreadable(HttpMessageNotReadableException ex) {
-        return build(HttpStatus.BAD_REQUEST, "Malformed request body or invalid value", null);
+    public ProblemDetail handleUnreadable(HttpMessageNotReadableException ex) {
+        return problem(HttpStatus.BAD_REQUEST, "Malformed request body or invalid value");
     }
 
     @ExceptionHandler(AuthenticationException.class)
-    public ResponseEntity<ApiError> handleAuthentication(AuthenticationException ex) {
-        return build(HttpStatus.UNAUTHORIZED, "Invalid e-mail or password", null);
+    public ProblemDetail handleAuthentication(AuthenticationException ex) {
+        return problem(HttpStatus.UNAUTHORIZED, "Invalid e-mail or password");
     }
 
     @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<ApiError> handleNotFound(ResourceNotFoundException ex) {
-        return build(HttpStatus.NOT_FOUND, ex.getMessage(), null);
+    public ProblemDetail handleNotFound(ResourceNotFoundException ex) {
+        return problem(HttpStatus.NOT_FOUND, ex.getMessage());
     }
 
     @ExceptionHandler(ConflictException.class)
-    public ResponseEntity<ApiError> handleConflict(ConflictException ex) {
-        return build(HttpStatus.CONFLICT, ex.getMessage(), null);
+    public ProblemDetail handleConflict(ConflictException ex) {
+        return problem(HttpStatus.CONFLICT, ex.getMessage());
     }
 
-    private ResponseEntity<ApiError> build(HttpStatus status, String message, Map<String, String> fields) {
-        return ResponseEntity.status(status)
-                .body(ApiError.of(status.value(), status.getReasonPhrase(), message, fields));
+    private static ProblemDetail problem(HttpStatus status, String detail) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(status, detail);
+        problem.setTitle(status.getReasonPhrase());
+        return problem;
     }
 }
