@@ -1,9 +1,11 @@
 import type { Order, OrderStatus } from '../api/orders'
-import { FLOW, STATUS_ACTION, STATUS_LABEL, formatCurrency, formatDateTime } from '../utils/order'
+import { FLOW, STATUS_ACTION, STATUS_LABEL, formatCurrency, formatDateTime, orderAgeLabel } from '../utils/order'
+import { ClockIcon, PhoneIcon } from './icons'
 import { StatusBadge } from './StatusBadge'
 
 interface Props {
   order: Order
+  now: number
   updating: boolean
   onChangeStatus: (order: Order, status: OrderStatus) => void
 }
@@ -25,7 +27,7 @@ function Progress({ status }: { status: OrderStatus }) {
   )
 }
 
-export function OrderCard({ order, updating, onChangeStatus }: Props) {
+export function OrderCard({ order, now, updating, onChangeStatus }: Props) {
   const cancelled = order.status === 'CANCELADO'
   const actions = order.allowedNextStatuses
 
@@ -36,14 +38,28 @@ export function OrderCard({ order, updating, onChangeStatus }: Props) {
           <h3>
             Pedido #{order.id} · {order.customerName}
           </h3>
-          <p className="muted">{formatDateTime(order.createdAt)}</p>
+          <p className="order__meta">
+            <span title={formatDateTime(order.createdAt)}>
+              <ClockIcon />
+              {orderAgeLabel(order, now)}
+            </span>
+            {order.customerPhone && (
+              <span>
+                <PhoneIcon />
+                {order.customerPhone}
+              </span>
+            )}
+          </p>
         </div>
         <StatusBadge status={order.status} />
       </header>
 
       {!cancelled && <Progress status={order.status} />}
 
-      <p className="order__address">📍 {order.deliveryAddress}</p>
+      <p className="order__address">
+        📍 {order.deliveryAddress}
+        {order.deliveryComplement && <span className="order__complement">{order.deliveryComplement}</span>}
+      </p>
 
       <ul className="order__items">
         {order.items.map((item, i) => (

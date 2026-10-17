@@ -66,6 +66,53 @@ export const ClockIcon = () => (
   </Icon>
 )
 
+export const SearchIcon = () => (
+  <Icon>
+    <circle cx="11" cy="11" r="7" />
+    <path d="m20 20-4-4" />
+  </Icon>
+)
+
+export const PhoneIcon = () => (
+  <Icon>
+    <path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2Z" />
+  </Icon>
+)
+
+export const ReceiptIcon = () => (
+  <Icon>
+    <path d="M6 3h12v18l-3-2-3 2-3-2-3 2V3Z" />
+    <path d="M9 8h6M9 12h6" />
+  </Icon>
+)
+
+export const FlameIcon = () => (
+  <Icon>
+    <path d="M12 3c1 3.5 5 5 5 10a5 5 0 0 1-10 0c0-2 1-3.2 2-4.2 0 2 1 3 2 3-.5-3-1-5 1-8.8Z" />
+  </Icon>
+)
+
+export const BikeIcon = () => (
+  <Icon>
+    <circle cx="5.5" cy="17.5" r="3.5" />
+    <circle cx="18.5" cy="17.5" r="3.5" />
+    <path d="M5.5 17.5 9 9h5l4.5 8.5M9 9l3 8.5M14 9l-1-3h-2" />
+  </Icon>
+)
+
+export const CheckIcon = () => (
+  <Icon>
+    <path d="m5 12.5 4.5 4.5L19 7.5" />
+  </Icon>
+)
+
+export const CancelIcon = () => (
+  <Icon>
+    <circle cx="12" cy="12" r="9" />
+    <path d="m9 9 6 6M15 9l-6 6" />
+  </Icon>
+)
+
 export const TrashIcon = () => (
   <Icon>
     <path d="M4 7h16M10 11v6M14 11v6" />

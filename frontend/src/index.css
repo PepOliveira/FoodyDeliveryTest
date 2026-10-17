@@ -12,8 +12,9 @@
   --line: #e9dfdb;
   --white: #ffffff;
 
-  --radius: 14px;
+  --radius: 12px;
   --radius-pill: 999px;
+  --radius-sm: 8px;
   --shadow: 0 6px 24px rgba(36, 30, 28, 0.07);
   --font: 'Sen', system-ui, -apple-system, 'Segoe UI', sans-serif;
 }
@@ -77,7 +78,7 @@ a:hover {
   gap: 8px;
   padding: 12px 24px;
   border: 2px solid transparent;
-  border-radius: var(--radius-pill);
+  border-radius: var(--radius-sm);
   font: inherit;
   font-weight: 700;
   cursor: pointer;
@@ -147,7 +148,7 @@ select {
   color: var(--ink);
   background: var(--white);
   border: 1.5px solid var(--line);
-  border-radius: 10px;
+  border-radius: 8px;
   transition: border-color 0.15s, box-shadow 0.15s;
 }
 input:focus,
@@ -160,7 +161,7 @@ select:focus {
 
 .alert {
   padding: 12px 14px;
-  border-radius: 10px;
+  border-radius: 8px;
   font-size: 0.9rem;
   font-weight: 500;
 }
@@ -188,7 +189,7 @@ select:focus {
   overflow: hidden;
   color: var(--white);
   background: var(--red);
-  border-radius: 28px;
+  border-radius: 16px;
 }
 .auth__hero h2 {
   font-size: clamp(2.2rem, 3.9vw, 3.4rem);
@@ -257,7 +258,7 @@ select:focus {
   padding: 18px 20px;
   color: var(--ink);
   background: var(--white);
-  border-radius: 18px;
+  border-radius: 12px;
   box-shadow: 0 24px 50px rgba(60, 0, 0, 0.32);
 }
 .preview__top {
@@ -338,7 +339,7 @@ select:focus {
   height: 36px;
   color: var(--red);
   background: var(--blush);
-  border-radius: 10px;
+  border-radius: 8px;
 }
 .preview__eta small {
   display: block;
@@ -385,7 +386,7 @@ select:focus {
 }
 .input input {
   padding: 14px 44px 14px 44px;
-  border-radius: 12px;
+  border-radius: 8px;
 }
 .input__icon {
   position: absolute;
@@ -504,6 +505,82 @@ select:focus {
   display: flex;
   gap: 10px;
 }
+.page-head__title {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+.live-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 12px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--red);
+  background: var(--blush);
+  border: 1px solid #ffc9c5;
+  border-radius: var(--radius-pill);
+}
+.live-chip__dot {
+  width: 8px;
+  height: 8px;
+  background: var(--red);
+  border-radius: 50%;
+  animation: live-pulse 1.6s ease-out infinite;
+}
+@keyframes live-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(211, 1, 1, 0.55);
+  }
+  70% {
+    box-shadow: 0 0 0 8px rgba(211, 1, 1, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(211, 1, 1, 0);
+  }
+}
+.search {
+  position: relative;
+  display: block;
+  margin-bottom: 16px;
+}
+.search svg {
+  position: absolute;
+  top: 50%;
+  left: 16px;
+  color: var(--ink-muted);
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+.search input {
+  padding: 14px 16px 14px 46px;
+  border-radius: var(--radius-sm);
+}
+.order__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  margin: 4px 0 0;
+  font-size: 0.82rem;
+  color: var(--ink-muted);
+}
+.order__meta span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.order__meta svg {
+  width: 14px;
+  height: 14px;
+}
+.order__complement {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.85rem;
+  color: var(--ink-muted);
+}
 .btn--danger {
   color: var(--red);
   border-color: #f2c4c0;
@@ -536,7 +613,7 @@ select:focus {
   color: var(--ink-soft);
   background: var(--white);
   border: 1.5px solid var(--line);
-  border-radius: var(--radius-pill);
+  border-radius: var(--radius-sm);
   cursor: pointer;
   transition: all 0.15s;
 }
@@ -555,7 +632,7 @@ select:focus {
   text-align: center;
   color: var(--ink-soft);
   background: var(--sand);
-  border-radius: var(--radius-pill);
+  border-radius: 6px;
 }
 .chip.is-active .chip__count {
   color: var(--ink);
@@ -633,12 +710,15 @@ select:focus {
 
 /* Status badges */
 .badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   flex-shrink: 0;
-  padding: 4px 12px;
+  padding: 5px 12px 5px 10px;
   font-size: 0.78rem;
   font-weight: 800;
   white-space: nowrap;
-  border-radius: var(--radius-pill);
+  border-radius: 6px;
 }
 .badge--recebido {
   color: #8a5a00;
@@ -732,7 +812,7 @@ select:focus {
   overflow-y: auto;
   padding: 28px;
   background: var(--white);
-  border-radius: 18px;
+  border-radius: 12px;
   box-shadow: 0 24px 60px rgba(0, 0, 0, 0.25);
 }
 .modal__panel h2 {
@@ -770,8 +850,13 @@ select:focus {
 }
 .btn--icon {
   width: 44px;
+  height: 44px;
   padding: 0;
-  border-radius: 12px;
+  border-radius: var(--radius-sm);
+}
+.badge svg {
+  width: 14px;
+  height: 14px;
 }
 .items {
   display: flex;
@@ -780,7 +865,7 @@ select:focus {
   margin: 0;
   padding: 14px;
   border: 1.5px dashed var(--line);
-  border-radius: 12px;
+  border-radius: 8px;
 }
 .items legend {
   padding: 0 6px;

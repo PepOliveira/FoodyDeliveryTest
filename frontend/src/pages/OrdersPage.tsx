@@ -1,20 +1,40 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { ordersApi, type Order, type OrderStatus } from '../api/orders'
 import { getErrorMessage } from '../api/client'
+import { LiveIndicator } from '../components/LiveIndicator'
 import { NewOrderModal } from '../components/NewOrderModal'
 import { OrderCard } from '../components/OrderCard'
+import { SearchIcon } from '../components/icons'
+import { useNow } from '../hooks/useNow'
 import { STATUS_LABEL } from '../utils/order'
 
 type Filter = 'TODOS' | OrderStatus
 const FILTERS: Filter[] = ['TODOS', 'RECEBIDO', 'EM_PREPARO', 'SAIU_PARA_ENTREGA', 'ENTREGUE', 'CANCELADO']
+
+const POLL_INTERVAL_MS = 10_000
+const CLOCK_INTERVAL_MS = 30_000
+
+function matchesSearch(order: Order, query: string): boolean {
+  const text = query.trim().toLowerCase()
+  if (!text) return true
+  const digits = text.replace(/\D/g, '')
+  const orderNumber = text.replace(/^#/, '')
+  return (
+    String(order.id) === orderNumber ||
+    order.customerName.toLowerCase().includes(text) ||
+    (digits.length > 0 && (order.customerPhone ?? '').replace(/\D/g, '').includes(digits))
+  )
+}
 
 export function OrdersPage() {
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [filter, setFilter] = useState<Filter>('TODOS')
+  const [search, setSearch] = useState('')
   const [showForm, setShowForm] = useState(false)
   const [updatingId, setUpdatingId] = useState<number | null>(null)
+  const now = useNow(CLOCK_INTERVAL_MS)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -40,13 +60,26 @@ export function OrdersPage() {
     }
   }, [])
 
-  const counts = useMemo(() => {
-    const map = new Map<Filter, number>([['TODOS', orders.length]])
-    orders.forEach((o) => map.set(o.status, (map.get(o.status) ?? 0) + 1))
-    return map
-  }, [orders])
+  useEffect(() => {
+    const id = window.setInterval(() => {
+      if (document.hidden) return
+      ordersApi
+        .list()
+        .then(setOrders)
+        .catch(() => undefined)
+    }, POLL_INTERVAL_MS)
+    return () => window.clearInterval(id)
+  }, [])
 
-  const visible = filter === 'TODOS' ? orders : orders.filter((o) => o.status === filter)
+  const searched = useMemo(() => orders.filter((o) => matchesSearch(o, search)), [orders, search])
+
+  const counts = useMemo(() => {
+    const map = new Map<Filter, number>([['TODOS', searched.length]])
+    searched.forEach((o) => map.set(o.status, (map.get(o.status) ?? 0) + 1))
+    return map
+  }, [searched])
+
+  const visible = filter === 'TODOS' ? searched : searched.filter((o) => o.status === filter)
 
   async function handleChangeStatus(order: Order, status: OrderStatus) {
     if (status === 'CANCELADO' && !window.confirm(`Cancelar o pedido #${order.id}?`)) return
@@ -68,10 +101,24 @@ export function OrdersPage() {
     setShowForm(false)
   }
 
+  const emptyTitle =
+    orders.length === 0
+      ? 'Nenhum pedido ainda'
+      : search.trim()
+        ? 'Nenhum pedido encontrado'
+        : 'Nenhum pedido com esse status'
+  const emptyHint =
+    orders.length === 0
+      ? 'Crie o primeiro pedido para começar o rastreamento.'
+      : 'Tente outra busca ou outro filtro.'
+
   return (
     <>
       <div className="page-head">
-        <h1>Pedidos</h1>
+        <div className="page-head__title">
+          <h1>Pedidos</h1>
+          <LiveIndicator />
+        </div>
         <div className="page-head__actions">
           <button type="button" className="btn btn--ghost" onClick={() => void load()} disabled={loading}>
             Atualizar
@@ -81,6 +128,17 @@ export function OrdersPage() {
           </button>
         </div>
       </div>
+
+      <label className="search">
+        <SearchIcon />
+        <input
+          type="search"
+          placeholder="Buscar por nº do pedido, nome ou telefone do cliente"
+          aria-label="Buscar pedidos"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+      </label>
 
       <div className="filters" role="tablist" aria-label="Filtrar por status">
         {FILTERS.map((f) => (
@@ -103,10 +161,8 @@ export function OrdersPage() {
         <p className="state">Carregando pedidos...</p>
       ) : visible.length === 0 ? (
         <div className="state card">
-          <h3>{orders.length === 0 ? 'Nenhum pedido ainda' : 'Nenhum pedido com esse status'}</h3>
-          <p className="muted">
-            {orders.length === 0 ? 'Crie o primeiro pedido para começar o rastreamento.' : 'Tente outro filtro.'}
-          </p>
+          <h3>{emptyTitle}</h3>
+          <p className="muted">{emptyHint}</p>
         </div>
       ) : (
         <div className="orders">
@@ -114,6 +170,7 @@ export function OrdersPage() {
             <OrderCard
               key={order.id}
               order={order}
+              now={now}
               updating={updatingId === order.id}
               onChangeStatus={handleChangeStatus}
             />

@@ -1,5 +1,6 @@
 import { Outlet } from 'react-router-dom'
 import { useAuth } from '../auth/context'
+import { LogoutIcon } from './icons'
 import { Logo } from './Logo'
 
 export function AppLayout() {
@@ -12,8 +13,14 @@ export function AppLayout() {
           <Logo />
           <div className="topbar__user">
             <span className="topbar__name">Olá, {user?.name}</span>
-            <button type="button" className="btn btn--ghost btn--sm" onClick={logout}>
-              Sair
+            <button
+              type="button"
+              className="btn btn--ghost btn--icon"
+              aria-label="Sair"
+              title="Sair"
+              onClick={logout}
+            >
+              <LogoutIcon />
             </button>
           </div>
         </div>
