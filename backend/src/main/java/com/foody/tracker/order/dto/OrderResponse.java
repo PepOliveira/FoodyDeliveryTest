@@ -12,7 +12,9 @@ import java.util.Set;
 public record OrderResponse(
         Long id,
         String customerName,
+        String customerPhone,
         String deliveryAddress,
+        String deliveryComplement,
         List<ItemResponse> items,
         OrderStatus status,
         Set<OrderStatus> allowedNextStatuses,
@@ -25,7 +27,9 @@ public record OrderResponse(
         return new OrderResponse(
                 order.getId(),
                 order.getCustomerName(),
+                order.getCustomerPhone(),
                 order.getDeliveryAddress(),
+                order.getDeliveryComplement(),
                 order.getItems().stream().map(ItemResponse::from).toList(),
                 order.getStatus(),
                 order.getStatus().allowedTransitions(),

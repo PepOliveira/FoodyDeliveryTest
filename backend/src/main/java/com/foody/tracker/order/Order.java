@@ -24,8 +24,15 @@ public class Order {
     @Column(nullable = false)
     private String customerName;
 
+    /** Nullable at database level so orders created before this field existed stay valid. */
+    @Column(length = 30)
+    private String customerPhone;
+
     @Column(nullable = false)
     private String deliveryAddress;
+
+    @Column(length = 200)
+    private String deliveryComplement;
 
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "order_items", joinColumns = @JoinColumn(name = "order_id"))
@@ -45,9 +52,12 @@ public class Order {
     @Column(nullable = false)
     private Instant updatedAt = Instant.now();
 
-    public Order(String customerName, String deliveryAddress, List<OrderItem> items, User createdBy) {
+    public Order(String customerName, String customerPhone, String deliveryAddress, String deliveryComplement,
+                 List<OrderItem> items, User createdBy) {
         this.customerName = customerName;
+        this.customerPhone = customerPhone;
         this.deliveryAddress = deliveryAddress;
+        this.deliveryComplement = deliveryComplement;
         this.items = new ArrayList<>(items);
         this.createdBy = createdBy;
     }

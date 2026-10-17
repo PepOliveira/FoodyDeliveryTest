@@ -27,7 +27,13 @@ public class OrderService {
         List<OrderItem> items = request.items().stream()
                 .map(i -> new OrderItem(i.name().trim(), i.quantity(), i.unitPrice()))
                 .toList();
-        Order order = new Order(request.customerName().trim(), request.deliveryAddress().trim(), items, creator);
+        Order order = new Order(
+                request.customerName().trim(),
+                request.customerPhone().trim(),
+                request.deliveryAddress().trim(),
+                blankToNull(request.deliveryComplement()),
+                items,
+                creator);
         return OrderResponse.from(orderRepository.save(order));
     }
 
@@ -51,6 +57,10 @@ public class OrderService {
         }
         order.changeStatus(next);
         return OrderResponse.from(order);
+    }
+
+    private static String blankToNull(String value) {
+        return value == null || value.isBlank() ? null : value.trim();
     }
 
     private Order getOrThrow(Long id) {

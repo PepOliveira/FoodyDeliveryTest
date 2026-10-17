@@ -25,7 +25,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class OrderControllerTest {
 
     private static final String ORDER_BODY = """
-            {"customerName":"Joao","deliveryAddress":"Rua A, 10",
+            {"customerName":"Joao","customerPhone":"(11) 99999-0000","deliveryAddress":"Rua A, 10",
+             "deliveryComplement":"Apto 12, portao azul",
              "items":[{"name":"Pizza","quantity":2,"unitPrice":39.90},{"name":"Soda","quantity":1,"unitPrice":6.00}]}""";
 
     @Autowired
@@ -65,6 +66,8 @@ class OrderControllerTest {
                         .contentType(MediaType.APPLICATION_JSON).content(ORDER_BODY))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.status").value("RECEBIDO"))
+                .andExpect(jsonPath("$.customerPhone").value("(11) 99999-0000"))
+                .andExpect(jsonPath("$.deliveryComplement").value("Apto 12, portao azul"))
                 .andExpect(jsonPath("$.total").value(85.8))
                 .andExpect(jsonPath("$.items.length()").value(2))
                 .andExpect(jsonPath("$.allowedNextStatuses.length()").value(2));
@@ -79,6 +82,25 @@ class OrderControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.fieldErrors.customerName").exists())
                 .andExpect(jsonPath("$.fieldErrors.items").exists());
+    }
+
+    @Test
+    void complementIsOptionalButPhoneIsRequired() throws Exception {
+        mvc.perform(post("/api/orders").header("Authorization", bearer)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"customerName":"Joao","customerPhone":"11999990000","deliveryAddress":"Rua A, 10",
+                                 "items":[{"name":"Pizza","quantity":1,"unitPrice":10}]}"""))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.deliveryComplement").doesNotExist());
+
+        mvc.perform(post("/api/orders").header("Authorization", bearer)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"customerName":"Joao","customerPhone":"abc","deliveryAddress":"Rua A, 10",
+                                 "items":[{"name":"Pizza","quantity":1,"unitPrice":10}]}"""))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.fieldErrors.customerPhone").exists());
     }
 
     @Test

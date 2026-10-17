@@ -6,6 +6,7 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 import java.math.BigDecimal;
@@ -13,7 +14,10 @@ import java.util.List;
 
 public record CreateOrderRequest(
         @NotBlank(message = "Customer name is required") @Size(max = 150) String customerName,
+        @NotBlank(message = "Customer phone is required")
+        @Pattern(regexp = "^[0-9()+\\-\\s]{8,20}$", message = "Invalid phone number") String customerPhone,
         @NotBlank(message = "Delivery address is required") @Size(max = 300) String deliveryAddress,
+        @Size(max = 200, message = "Complement must have at most 200 characters") String deliveryComplement,
         @NotEmpty(message = "At least one item is required") List<@Valid @NotNull ItemRequest> items
 ) {
 
