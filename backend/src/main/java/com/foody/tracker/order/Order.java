@@ -64,13 +64,20 @@ public class Order {
 
     public Order(String customerName, String customerPhone, String deliveryAddress, String deliveryComplement,
                  List<OrderItem> items, User createdBy) {
+        this(customerName, customerPhone, deliveryAddress, deliveryComplement, items, createdBy, Instant.now());
+    }
+
+    public Order(String customerName, String customerPhone, String deliveryAddress, String deliveryComplement,
+                 List<OrderItem> items, User createdBy, Instant createdAt) {
         this.customerName = customerName;
         this.customerPhone = customerPhone;
         this.deliveryAddress = deliveryAddress;
         this.deliveryComplement = deliveryComplement;
         this.items = new ArrayList<>(items);
         this.createdBy = createdBy;
-        this.history.add(new StatusChange(this.status, this.createdAt));
+        this.createdAt = createdAt;
+        this.updatedAt = createdAt;
+        this.history.add(new StatusChange(this.status, createdAt));
     }
 
     public BigDecimal total() {
@@ -78,12 +85,15 @@ public class Order {
     }
 
     public void changeStatus(OrderStatus next) {
+        changeStatus(next, Instant.now());
+    }
+
+    public void changeStatus(OrderStatus next, Instant at) {
         if (!status.canTransitionTo(next)) {
             throw new InvalidStatusTransitionException(status, next);
         }
-        Instant now = Instant.now();
         this.status = next;
-        this.updatedAt = now;
-        this.history.add(new StatusChange(next, now));
+        this.updatedAt = at;
+        this.history.add(new StatusChange(next, at));
     }
 }
