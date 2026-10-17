@@ -6,3 +6,5 @@ Thumbs.db
 # Local database
 *.db
 *.db-journal
+
+.env

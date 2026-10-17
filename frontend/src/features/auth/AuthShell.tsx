@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { Logo } from './Logo'
+import { Logo } from '../../components/ui/Logo'
 import { TrackingPreview } from './TrackingPreview'
 
 interface Props {

@@ -1,7 +1,7 @@
 import { Outlet } from 'react-router-dom'
-import { useAuth } from '../auth/context'
-import { LogoutIcon } from './icons'
-import { Logo } from './Logo'
+import { useAuth } from '../../features/auth/context'
+import { LogoutIcon } from '../ui/icons'
+import { Logo } from '../ui/Logo'
 
 export function AppLayout() {
   const { user, logout } = useAuth()

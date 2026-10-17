@@ -1,7 +1,7 @@
 import type { ComponentType } from 'react'
-import type { OrderStatus } from '../api/orders'
-import { STATUS_LABEL } from '../utils/order'
-import { BikeIcon, CancelIcon, CheckIcon, FlameIcon, ReceiptIcon } from './icons'
+import type { OrderStatus } from '../../api/orders'
+import { STATUS_LABEL } from './orderUtils'
+import { BikeIcon, CancelIcon, CheckIcon, FlameIcon, ReceiptIcon } from '../../components/ui/icons'
 
 const STATUS_ICON: Record<OrderStatus, ComponentType> = {
   RECEBIDO: ReceiptIcon,

@@ -1,4 +1,4 @@
-import type { Order, OrderStatus } from '../api/orders'
+import type { Order, OrderStatus } from '../../api/orders'
 
 export const STATUS_LABEL: Record<OrderStatus, string> = {
   RECEBIDO: 'Recebido',

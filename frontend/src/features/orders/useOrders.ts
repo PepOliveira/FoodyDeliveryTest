@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { ordersApi, type Order, type OrderStatus, type OrderSummary } from '../api/orders'
-import { getErrorMessage } from '../api/client'
+import { ordersApi, type Order, type OrderStatus, type OrderSummary } from '../../api/orders'
+import { getErrorMessage } from '../../api/client'
 
 export const PAGE_SIZE = 20
 

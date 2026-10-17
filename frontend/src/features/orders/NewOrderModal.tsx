@@ -1,9 +1,9 @@
 import { useEffect, useState, type FormEvent } from 'react'
-import { ordersApi, type Order } from '../api/orders'
-import { getErrorMessage } from '../api/client'
-import { formatCurrency } from '../utils/order'
-import { formatPhone } from '../utils/phone'
-import { CloseIcon, TrashIcon } from './icons'
+import { ordersApi, type Order } from '../../api/orders'
+import { getErrorMessage } from '../../api/client'
+import { formatCurrency } from './orderUtils'
+import { formatPhone } from '../../lib/phone'
+import { CloseIcon, TrashIcon } from '../../components/ui/icons'
 
 interface Props {
   onClose: () => void

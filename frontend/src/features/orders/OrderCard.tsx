@@ -1,4 +1,4 @@
-import type { Order, OrderStatus } from '../api/orders'
+import type { Order, OrderStatus } from '../../api/orders'
 import {
   FLOW,
   STATUS_ACTION,
@@ -11,9 +11,9 @@ import {
   isInProgress,
   orderDurationMs,
   orderWaitMs,
-} from '../utils/order'
-import { whatsappUrl } from '../utils/phone'
-import { ArrowIcon, ClockIcon, PhoneIcon, PinIcon } from './icons'
+} from './orderUtils'
+import { whatsappUrl } from '../../lib/phone'
+import { ArrowIcon, ClockIcon, PhoneIcon, PinIcon } from '../../components/ui/icons'
 import { StatusBadge } from './StatusBadge'
 
 interface Props {

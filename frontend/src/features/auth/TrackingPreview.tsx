@@ -1,4 +1,4 @@
-import { ClockIcon } from './icons'
+import { ClockIcon } from '../../components/ui/icons'
 
 const STEPS = ['Recebido', 'Em preparo', 'A caminho', 'Entregue']
 

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
-import { authApi, type AuthResponse, type User } from '../api/auth'
-import { AUTH_EXPIRED_EVENT } from '../api/client'
-import { session } from '../api/session'
+import { authApi, type AuthResponse, type User } from '../../api/auth'
+import { AUTH_EXPIRED_EVENT } from '../../api/client'
+import { session } from '../../api/session'
 import { AuthContext, type AuthContextValue } from './context'
 
 export function AuthProvider({ children }: { children: ReactNode }) {
