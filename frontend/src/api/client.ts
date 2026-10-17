@@ -11,7 +11,9 @@ export interface ApiError {
   fieldErrors?: Record<string, string> | null
 }
 
-export const api = axios.create({ baseURL: import.meta.env.VITE_API_URL || '/api' })
+const apiOrigin = (import.meta.env.VITE_API_URL ?? '').replace(/\/+$/, '')
+
+export const api = axios.create({ baseURL: `${apiOrigin}/api` })
 
 api.interceptors.request.use((config) => {
   const token = session.getToken()

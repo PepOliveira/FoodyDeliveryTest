@@ -6,6 +6,7 @@ import { LiveIndicator } from './LiveIndicator'
 import { NewOrderModal } from './NewOrderModal'
 import { OrderCard } from './OrderCard'
 import { PlusIcon, SearchIcon } from '../../components/ui/icons'
+import { SlowServerHint } from '../../components/ui/SlowServerHint'
 import { useDebouncedValue } from '../../hooks/useDebouncedValue'
 import { useNow } from '../../hooks/useNow'
 import { useOrders } from './useOrders'
@@ -149,7 +150,10 @@ export function OrdersPage() {
       {visibleError && <div className="alert alert--error" role="alert">{visibleError}</div>}
 
       {loading ? (
-        <p className="state">Carregando pedidos...</p>
+        <>
+          <p className="state">Carregando pedidos...</p>
+          <SlowServerHint active={loading} />
+        </>
       ) : orders.length === 0 ? (
         <div className="state card">
           <h3>{emptyTitle}</h3>

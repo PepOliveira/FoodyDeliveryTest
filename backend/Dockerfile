@@ -12,6 +12,7 @@ WORKDIR /app
 COPY --from=build /workspace/target/*.jar app.jar
 USER foody
 ENV DB_PATH=/data/foody.db
+ENV JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=65 -XX:+UseSerialGC -Xss512k"
 VOLUME /data
 EXPOSE 8080
 ENTRYPOINT ["java", "-jar", "/app/app.jar"]

@@ -5,6 +5,7 @@ import { useAuth } from './context'
 import { AuthShell } from './AuthShell'
 import { ArrowIcon, MailIcon } from '../../components/ui/icons'
 import { InputField, PasswordField } from '../../components/ui/InputField'
+import { SlowServerHint } from '../../components/ui/SlowServerHint'
 
 export function LoginPage() {
   const { login } = useAuth()
@@ -74,6 +75,7 @@ export function LoginPage() {
             </>
           )}
         </button>
+        <SlowServerHint active={loading} />
       </form>
     </AuthShell>
   )
