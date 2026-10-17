@@ -3,7 +3,7 @@ import type { LoginPayload, RegisterPayload, User } from '../api/auth'
 
 export interface AuthContextValue {
   user: User | null
-  login: (payload: LoginPayload) => Promise<void>
+  login: (payload: LoginPayload, remember?: boolean) => Promise<void>
   register: (payload: RegisterPayload) => Promise<void>
   logout: () => void
 }

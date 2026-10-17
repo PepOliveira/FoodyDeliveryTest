@@ -3,6 +3,8 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { getErrorMessage } from '../api/client'
 import { useAuth } from '../auth/context'
 import { AuthShell } from '../components/AuthShell'
+import { ArrowIcon, MailIcon } from '../components/icons'
+import { InputField, PasswordField } from '../components/InputField'
 
 export function LoginPage() {
   const { login } = useAuth()
@@ -12,6 +14,7 @@ export function LoginPage() {
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [remember, setRemember] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
@@ -20,7 +23,7 @@ export function LoginPage() {
     setError(null)
     setLoading(true)
     try {
-      await login({ email, password })
+      await login({ email, password }, remember)
       navigate(from, { replace: true })
     } catch (err) {
       setError(getErrorMessage(err))
@@ -31,7 +34,7 @@ export function LoginPage() {
 
   return (
     <AuthShell
-      title="Entrar"
+      title="Que bom ter você de volta"
       subtitle="Acesse sua conta para gerenciar os pedidos."
       footer={
         <>
@@ -40,17 +43,36 @@ export function LoginPage() {
       }
     >
       <form onSubmit={handleSubmit} className="form">
-        <label className="field">
-          <span>E-mail</span>
-          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoFocus />
-        </label>
-        <label className="field">
-          <span>Senha</span>
-          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+        <InputField
+          label="E-mail"
+          icon={<MailIcon />}
+          type="email"
+          placeholder="voce@seunegocio.com"
+          autoComplete="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+          autoFocus
+        />
+        <PasswordField
+          label="Senha"
+          placeholder="Digite sua senha"
+          autoComplete="current-password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+        />
+        <label className="check">
+          <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} />
+          Manter conectado neste dispositivo
         </label>
         {error && <div className="alert alert--error" role="alert">{error}</div>}
-        <button type="submit" className="btn btn--primary btn--block" disabled={loading}>
-          {loading ? 'Entrando...' : 'Entrar'}
+        <button type="submit" className="btn btn--primary btn--block btn--lg" disabled={loading}>
+          {loading ? 'Entrando...' : (
+            <>
+              Entrar <ArrowIcon />
+            </>
+          )}
         </button>
       </form>
     </AuthShell>

@@ -1,31 +1,19 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { authApi, type AuthResponse, type User } from '../api/auth'
-import { AUTH_EXPIRED_EVENT, tokenStorage } from '../api/client'
+import { AUTH_EXPIRED_EVENT } from '../api/client'
+import { session } from '../api/session'
 import { AuthContext, type AuthContextValue } from './context'
 
-const USER_KEY = 'foody.user'
-
-function loadStoredUser(): User | null {
-  if (!tokenStorage.get()) return null
-  try {
-    return JSON.parse(localStorage.getItem(USER_KEY) ?? 'null') as User | null
-  } catch {
-    return null
-  }
-}
-
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(loadStoredUser)
+  const [user, setUser] = useState<User | null>(session.getUser)
 
   const logout = useCallback(() => {
-    tokenStorage.clear()
-    localStorage.removeItem(USER_KEY)
+    session.clear()
     setUser(null)
   }, [])
 
-  const startSession = useCallback((data: AuthResponse) => {
-    tokenStorage.set(data.token)
-    localStorage.setItem(USER_KEY, JSON.stringify(data.user))
+  const startSession = useCallback((data: AuthResponse, remember: boolean) => {
+    session.save(data.token, data.user, remember)
     setUser(data.user)
   }, [])
 
@@ -37,8 +25,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const value = useMemo<AuthContextValue>(
     () => ({
       user,
-      login: async (payload) => startSession(await authApi.login(payload)),
-      register: async (payload) => startSession(await authApi.register(payload)),
+      login: async (payload, remember = true) => startSession(await authApi.login(payload), remember),
+      register: async (payload) => startSession(await authApi.register(payload), true),
       logout,
     }),
     [user, startSession, logout],

@@ -1,13 +1,8 @@
 import axios, { AxiosError } from 'axios'
 
-const TOKEN_KEY = 'foody.token'
-export const AUTH_EXPIRED_EVENT = 'foody:auth-expired'
+import { session } from './session'
 
-export const tokenStorage = {
-  get: () => localStorage.getItem(TOKEN_KEY),
-  set: (token: string) => localStorage.setItem(TOKEN_KEY, token),
-  clear: () => localStorage.removeItem(TOKEN_KEY),
-}
+export const AUTH_EXPIRED_EVENT = 'foody:auth-expired'
 
 export interface ApiError {
   status: number
@@ -18,7 +13,7 @@ export interface ApiError {
 export const api = axios.create({ baseURL: '/api' })
 
 api.interceptors.request.use((config) => {
-  const token = tokenStorage.get()
+  const token = session.getToken()
   if (token) config.headers.Authorization = `Bearer ${token}`
   return config
 })

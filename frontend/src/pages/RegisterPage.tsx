@@ -3,6 +3,8 @@ import { Link, useNavigate } from 'react-router-dom'
 import { getErrorMessage } from '../api/client'
 import { useAuth } from '../auth/context'
 import { AuthShell } from '../components/AuthShell'
+import { ArrowIcon, MailIcon, UserIcon } from '../components/icons'
+import { InputField, PasswordField } from '../components/InputField'
 
 export function RegisterPage() {
   const { register } = useAuth()
@@ -30,7 +32,7 @@ export function RegisterPage() {
 
   return (
     <AuthShell
-      title="Criar conta"
+      title="Crie sua conta"
       subtitle="Cadastre-se para começar a rastrear pedidos."
       footer={
         <>
@@ -39,29 +41,44 @@ export function RegisterPage() {
       }
     >
       <form onSubmit={handleSubmit} className="form">
-        <label className="field">
-          <span>Nome</span>
-          <input value={name} onChange={(e) => setName(e.target.value)} required maxLength={100} autoFocus />
-        </label>
-        <label className="field">
-          <span>E-mail</span>
-          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-        </label>
-        <label className="field">
-          <span>Senha</span>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            minLength={6}
-            maxLength={72}
-          />
-          <small className="muted">Mínimo de 6 caracteres.</small>
-        </label>
+        <InputField
+          label="Nome"
+          icon={<UserIcon />}
+          placeholder="Seu nome"
+          autoComplete="name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          required
+          maxLength={100}
+          autoFocus
+        />
+        <InputField
+          label="E-mail"
+          icon={<MailIcon />}
+          type="email"
+          placeholder="voce@seunegocio.com"
+          autoComplete="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+        />
+        <PasswordField
+          label="Senha"
+          placeholder="Mínimo de 6 caracteres"
+          autoComplete="new-password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+          minLength={6}
+          maxLength={72}
+        />
         {error && <div className="alert alert--error" role="alert">{error}</div>}
-        <button type="submit" className="btn btn--primary btn--block" disabled={loading}>
-          {loading ? 'Criando conta...' : 'Criar conta'}
+        <button type="submit" className="btn btn--primary btn--block btn--lg" disabled={loading}>
+          {loading ? 'Criando conta...' : (
+            <>
+              Criar conta <ArrowIcon />
+            </>
+          )}
         </button>
       </form>
     </AuthShell>
