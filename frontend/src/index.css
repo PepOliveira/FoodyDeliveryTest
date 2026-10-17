@@ -497,9 +497,9 @@ select:focus {
 }
 .page-head__title {
   display: flex;
-  align-items: center;
-  gap: 14px;
-  flex-wrap: wrap;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
 }
 .live-chip {
   display: inline-flex;
