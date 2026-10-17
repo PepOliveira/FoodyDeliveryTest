@@ -135,6 +135,14 @@ class OrderControllerTest {
     }
 
     @Test
+    void cannotCancelAnOrderThatAlreadyLeftForDelivery() throws Exception {
+        long id = createOrder();
+        changeStatus(id, "EM_PREPARO");
+        changeStatus(id, "SAIU_PARA_ENTREGA").andExpect(status().isOk());
+        changeStatus(id, "CANCELADO").andExpect(status().isConflict());
+    }
+
+    @Test
     void restoresACancelledOrder() throws Exception {
         long id = createOrder();
         changeStatus(id, "CANCELADO").andExpect(status().isOk());

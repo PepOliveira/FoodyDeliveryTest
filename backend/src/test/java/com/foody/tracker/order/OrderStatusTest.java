@@ -24,9 +24,15 @@ class OrderStatusTest {
     }
 
     @ParameterizedTest
-    @EnumSource(value = OrderStatus.class, names = {"RECEBIDO", "EM_PREPARO", "SAIU_PARA_ENTREGA"})
-    void canCancelWhileInProgress(OrderStatus status) {
+    @EnumSource(value = OrderStatus.class, names = {"RECEBIDO", "EM_PREPARO"})
+    void canCancelBeforeDispatch(OrderStatus status) {
         assertThat(status.canTransitionTo(CANCELADO)).isTrue();
+    }
+
+    @Test
+    void cannotCancelAfterDispatch() {
+        assertThat(SAIU_PARA_ENTREGA.canTransitionTo(CANCELADO)).isFalse();
+        assertThat(SAIU_PARA_ENTREGA.allowedTransitions()).containsExactly(ENTREGUE);
     }
 
     @Test
