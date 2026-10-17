@@ -48,8 +48,6 @@ function matchesFilter(order: Order, filter: Filter): boolean {
   return order.status === filter
 }
 
-const byOldestFirst = (a: Order, b: Order) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-
 export function OrdersPage() {
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
@@ -92,11 +90,7 @@ export function OrdersPage() {
     return map
   }, [searched])
 
-  const visible = useMemo(() => {
-    const list = searched.filter((o) => matchesFilter(o, filter))
-    const prioritised = filter === 'ANDAMENTO' || (filter !== 'TODOS' && isInProgress(filter))
-    return prioritised ? [...list].sort(byOldestFirst) : list
-  }, [searched, filter])
+  const visible = useMemo(() => searched.filter((o) => matchesFilter(o, filter)), [searched, filter])
 
   async function changeStatus(order: Order, status: OrderStatus) {
     setUpdatingId(order.id)
