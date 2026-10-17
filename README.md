@@ -1,5 +1,7 @@
 # Foody Delivery - Mini Rastreador de Pedidos
 
+![CI](https://github.com/PepOliveira/FoodyDeliveryTest/actions/workflows/ci.yml/badge.svg)
+
 Versão simplificada de um sistema de rastreamento de pedidos de delivery: cadastro e login, criação de pedidos, acompanhamento por status e uma lista que se atualiza sozinha.
 
 | Login | Pedidos |
@@ -18,13 +20,14 @@ Versão simplificada de um sistema de rastreamento de pedidos de delivery: cadas
 - [Arquitetura](#arquitetura)
 - [Decisões e trade-offs](#decisões-e-trade-offs)
 - [Testes](#testes)
+- [Deploy gratuito (Vercel + Render)](#deploy-gratuito-vercel--render)
 - [O que eu faria com mais tempo](#o-que-eu-faria-com-mais-tempo)
 
 ## Stack
 
 **Back-end:** Java 21, Spring Boot 4.1, Spring Security com JWT (jjwt) e BCrypt, Spring Data JPA, Bean Validation, Flyway, SQLite, springdoc-openapi (Swagger UI), JUnit 5, Mockito e MockMvc.
 
-**Front-end:** React 19, TypeScript, Vite, React Router e Axios, com CSS próprio baseado nas cores e na fonte (Sen) da Foody.
+**Front-end:** React 19, TypeScript, Vite, React Router e Axios, com CSS próprio baseado nas cores e na fonte (Sen) da Foody, e Vitest com Testing Library nos testes.
 
 ## Como rodar
 
@@ -71,7 +74,8 @@ A aplicação abre em http://localhost:5173 e o Vite encaminha `/api` para `http
 | `JWT_SECRET` | valor de desenvolvimento | segredo de assinatura do JWT (mínimo de 32 caracteres); troque em produção |
 | `DB_PATH` | `foody.db` | caminho do arquivo SQLite |
 | `CORS_ORIGINS` | `http://localhost:5173` | origens permitidas, separadas por vírgula |
-| `VITE_API_URL` | vazio (usa `/api`) | URL base da API no front-end |
+| `PORT` | `8080` | porta do servidor (plataformas como o Render definem esta variável) |
+| `VITE_API_URL` | vazio | origem da API no front-end, sem `/api` no fim (ex.: `https://foody-api.onrender.com`); vazio usa `/api` no mesmo domínio, via proxy |
 | `VITE_PROXY_TARGET` | `http://localhost:8080` | destino do proxy do Vite em desenvolvimento |
 
 ## Usuário de teste
@@ -162,21 +166,69 @@ docker-compose.yml
 
 ```bash
 cd backend && ./mvnw test
-cd frontend && npm run build && npm run lint
+cd frontend && npm run lint && npm test && npm run build
 ```
 
-São 42 testes no back-end:
+O GitHub Actions roda os dois conjuntos a cada push.
+
+**Back-end, 42 testes:**
 
 - unitários da máquina de estados (`OrderStatusTest`);
 - unitários do serviço com Mockito (`OrderServiceTest`);
 - de integração com MockMvc para autenticação, pedidos, transições, histórico, busca, filtro, paginação e contagens, rodando as mesmas migrations do Flyway em um SQLite em memória;
 - do seed de demonstração.
 
-O front-end ainda não tem testes automatizados; a interface foi validada manualmente e com scripts de navegador durante o desenvolvimento.
+**Front-end, 62 testes:**
+
+- unitários dos helpers (telefone, WhatsApp, duração, moeda), da sessão (`localStorage` ou `sessionStorage`) e do debounce;
+- de componente do cartão do pedido (destaque após 10 minutos, link do WhatsApp, ações por status e dica do histórico);
+- de página para a lista (filtros, contagens vindas do servidor, busca, "Carregar mais", confirmação de cancelamento, erros) e para o login;
+- das guardas de rota.
+
+## Deploy gratuito (Vercel + Render)
+
+A Vercel hospeda apenas o front-end (arquivos estáticos). O back-end é um container Docker com Java e SQLite, então ele vai para o **Render**, que oferece um plano gratuito para web services com Docker.
+
+### 1. Back-end no Render
+
+1. Crie uma conta em [render.com](https://render.com) entrando com o GitHub.
+2. Clique em **New > Blueprint**, escolha este repositório e confirme. O Render lê o `render.yaml` e cria o serviço `foody-api` (Docker, plano Free) com `JWT_SECRET` gerado automaticamente.
+3. Quando ele perguntar o valor de `CORS_ORIGINS`, informe um valor provisório (por exemplo `https://example.com`). Você ajusta no passo 3.
+4. Aguarde o build. Anote a URL do serviço, algo como `https://foody-api.onrender.com`, e confira `https://foody-api.onrender.com/swagger-ui.html`.
+
+### 2. Front-end na Vercel
+
+1. Crie uma conta em [vercel.com](https://vercel.com) entrando com o GitHub e clique em **Add New > Project**.
+2. Importe este repositório e defina **Root Directory** como `frontend`. O framework Vite é detectado sozinho (build `npm run build`, saída `dist`).
+3. Em **Environment Variables**, crie `VITE_API_URL` com a URL do Render, **sem barra no fim e sem `/api`** (por exemplo `https://foody-api.onrender.com`).
+4. Clique em **Deploy** e anote a URL final, como `https://foody-delivery.vercel.app`.
+
+### 3. Liberar o CORS
+
+1. No Render, abra o serviço `foody-api` e vá em **Environment**.
+2. Altere `CORS_ORIGINS` para a URL exata da Vercel, com `https` e sem barra no fim. Para mais de uma origem, separe por vírgula.
+3. Salve. O Render reinicia o serviço.
+4. Abra a URL da Vercel e entre com `demo@foody.com` / `demo123`.
+
+### O que esperar do plano gratuito
+
+- O serviço do Render **dorme após 15 minutos sem acesso** e leva cerca de 1 minuto para acordar. O front mostra um aviso enquanto isso acontece.
+- O Render não oferece disco persistente no plano gratuito: o SQLite **volta ao estado inicial a cada reinício ou novo deploy**. O seed recria o usuário de teste e os pedidos de exemplo, mas pedidos criados durante a avaliação se perdem.
+- O serviço tem 512 MB de memória. A imagem limita a JVM para caber nisso (cerca de 280 MB em uso nos testes locais).
+- Se precisar de dados persistentes, o caminho é PostgreSQL gerenciado; as migrations atuais usam SQL do SQLite e precisariam ser adaptadas.
+
+### Problemas comuns
+
+| Sintoma | Causa provável |
+|---|---|
+| Login responde `403` no navegador | `CORS_ORIGINS` diferente da URL da Vercel (confira `https`, subdomínio e barra no fim) |
+| Chamadas para `/api` dão `404` | `VITE_API_URL` com `/api` no fim, ou vazio no build da Vercel (redeploy depois de alterar) |
+| Primeira tela fica carregando por muito tempo | o servidor gratuito está acordando; aguarde cerca de 1 minuto |
+| Recarregar uma página dá `404` | falta o `vercel.json` ou o Root Directory não é `frontend` |
 
 ## O que eu faria com mais tempo
 
-- Testes do front-end (Vitest e Testing Library) e testes ponta a ponta (Playwright) do fluxo de login, criação e mudança de status.
+- Testes ponta a ponta (Playwright) do fluxo de login, criação e mudança de status.
 - Atualização em tempo real com Server-Sent Events em vez de polling.
 - Fotos de comprovante de entrega, guardadas em um bucket S3 com URLs assinadas.
 - Perfis de acesso (atendente, entregador, gerente) e pedidos associados a uma loja.
