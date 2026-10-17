@@ -2,7 +2,6 @@ import { ClockIcon } from './icons'
 
 const STEPS = ['Recebido', 'Em preparo', 'A caminho', 'Entregue']
 
-/** Decorative preview of a live order. The order number and ETA are sample data. */
 export function TrackingPreview() {
   return (
     <div className="preview" aria-hidden="true">

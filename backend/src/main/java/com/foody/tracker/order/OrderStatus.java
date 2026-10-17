@@ -10,7 +10,6 @@ public enum OrderStatus {
     ENTREGUE,
     CANCELADO;
 
-    /** Statuses an order in this status may move to. ENTREGUE and CANCELADO are final. */
     public Set<OrderStatus> allowedTransitions() {
         return switch (this) {
             case RECEBIDO -> EnumSet.of(EM_PREPARO, CANCELADO);

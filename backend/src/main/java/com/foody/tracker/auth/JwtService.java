@@ -34,7 +34,6 @@ public class JwtService {
                 .compact();
     }
 
-    /** Returns the e-mail (subject) when the token is valid and not expired. */
     public Optional<String> validateAndExtractEmail(String token) {
         try {
             return Optional.ofNullable(

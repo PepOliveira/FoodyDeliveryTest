@@ -24,7 +24,6 @@ public class Order {
     @Column(nullable = false)
     private String customerName;
 
-    /** Nullable at database level so orders created before this field existed stay valid. */
     @Column(length = 30)
     private String customerPhone;
 

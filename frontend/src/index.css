@@ -1,4 +1,3 @@
-/* ---------- Foody design tokens ---------- */
 :root {
   --red: #d30101;
   --red-dark: #b00000;
@@ -64,13 +63,11 @@ a:hover {
   padding: 0 20px;
 }
 
-/* ---------- Logo ---------- */
 .logo {
   display: block;
   width: auto;
 }
 
-/* ---------- Buttons ---------- */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -122,7 +119,6 @@ a:hover {
   width: 100%;
 }
 
-/* ---------- Forms ---------- */
 .form {
   display: flex;
   flex-direction: column;
@@ -171,7 +167,6 @@ select:focus {
   border: 1px solid #ffc9c5;
 }
 
-/* ---------- Auth pages ---------- */
 .auth {
   min-height: 100vh;
   display: grid;
@@ -210,7 +205,6 @@ select:focus {
   opacity: 0.92;
 }
 
-/* Live tracking preview */
 .preview {
   position: absolute;
   inset: 0;
@@ -350,7 +344,6 @@ select:focus {
   font-size: 0.95rem;
 }
 
-/* Form side */
 .auth__panel {
   display: flex;
   flex-direction: column;
@@ -379,7 +372,6 @@ select:focus {
   font-size: 0.92rem;
 }
 
-/* Fields with icons */
 .input {
   position: relative;
   display: block;
@@ -455,7 +447,6 @@ select:focus {
   }
 }
 
-/* ---------- App shell ---------- */
 .topbar {
   position: sticky;
   top: 0;
@@ -500,7 +491,6 @@ select:focus {
   }
 }
 
-/* ---------- Orders ---------- */
 .page-head__actions {
   display: flex;
   gap: 10px;
@@ -708,7 +698,6 @@ select:focus {
   flex-wrap: wrap;
 }
 
-/* Status badges */
 .badge {
   display: inline-flex;
   align-items: center;
@@ -741,7 +730,6 @@ select:focus {
   background: #ffdcd9;
 }
 
-/* Progress tracker */
 .progress {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -794,7 +782,6 @@ select:focus {
   color: var(--ink);
 }
 
-/* Modal */
 .modal {
   position: fixed;
   inset: 0;

@@ -8,7 +8,6 @@ export const STATUS_LABEL: Record<OrderStatus, string> = {
   CANCELADO: 'Cancelado',
 }
 
-/** Label of the action button that moves an order into the given status. */
 export const STATUS_ACTION: Record<OrderStatus, string> = {
   RECEBIDO: 'Reabrir',
   EM_PREPARO: 'Iniciar preparo',
@@ -17,7 +16,6 @@ export const STATUS_ACTION: Record<OrderStatus, string> = {
   CANCELADO: 'Cancelar pedido',
 }
 
-/** Happy-path steps shown in the progress tracker. */
 export const FLOW: OrderStatus[] = ['RECEBIDO', 'EM_PREPARO', 'SAIU_PARA_ENTREGA', 'ENTREGUE']
 
 const currency = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })

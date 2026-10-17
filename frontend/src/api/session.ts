@@ -3,7 +3,6 @@ import type { User } from './auth'
 const TOKEN_KEY = 'foody.token'
 const USER_KEY = 'foody.user'
 
-// "Keep me signed in" uses localStorage; otherwise the session lives only in this tab.
 const stores = [localStorage, sessionStorage]
 
 function read(key: string): string | null {

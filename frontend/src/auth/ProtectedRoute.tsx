@@ -7,7 +7,6 @@ export function ProtectedRoute() {
   return user ? <Outlet /> : <Navigate to="/login" replace state={{ from: location }} />
 }
 
-/** Redirects already authenticated users away from the login/register pages. */
 export function PublicOnlyRoute() {
   const { user } = useAuth()
   return user ? <Navigate to="/" replace /> : <Outlet />

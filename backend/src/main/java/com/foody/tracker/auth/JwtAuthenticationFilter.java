@@ -38,7 +38,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     var auth = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
                     SecurityContextHolder.getContext().setAuthentication(auth);
                 } catch (UsernameNotFoundException ignored) {
-                    // token for a user that no longer exists: stay unauthenticated
                 }
             });
         }
