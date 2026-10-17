@@ -2,6 +2,8 @@ import { useState, type FormEvent } from 'react'
 import { ordersApi, type Order } from '../api/orders'
 import { getErrorMessage } from '../api/client'
 import { formatCurrency } from '../utils/order'
+import { formatPhone } from '../utils/phone'
+import { TrashIcon } from './icons'
 
 interface Props {
   onClose: () => void
@@ -18,7 +20,9 @@ const emptyItem = (): ItemDraft => ({ name: '', quantity: '1', unitPrice: '' })
 
 export function NewOrderModal({ onClose, onCreated }: Props) {
   const [customerName, setCustomerName] = useState('')
+  const [customerPhone, setCustomerPhone] = useState('')
   const [deliveryAddress, setDeliveryAddress] = useState('')
+  const [deliveryComplement, setDeliveryComplement] = useState('')
   const [items, setItems] = useState<ItemDraft[]>([emptyItem()])
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
@@ -36,7 +40,9 @@ export function NewOrderModal({ onClose, onCreated }: Props) {
     try {
       const order = await ordersApi.create({
         customerName,
+        customerPhone,
         deliveryAddress,
+        deliveryComplement: deliveryComplement.trim() || undefined,
         items: items.map((i) => ({
           name: i.name,
           quantity: Number(i.quantity),
@@ -56,13 +62,38 @@ export function NewOrderModal({ onClose, onCreated }: Props) {
         <h2 id="new-order-title">Novo pedido</h2>
 
         <div className="form">
-          <label className="field">
-            <span>Cliente</span>
-            <input value={customerName} onChange={(e) => setCustomerName(e.target.value)} required autoFocus />
-          </label>
+          <div className="form__row">
+            <label className="field">
+              <span>Cliente</span>
+              <input value={customerName} onChange={(e) => setCustomerName(e.target.value)} required autoFocus />
+            </label>
+            <label className="field">
+              <span>Telefone</span>
+              <input
+                type="tel"
+                inputMode="tel"
+                placeholder="(11) 99999-9999"
+                value={customerPhone}
+                onChange={(e) => setCustomerPhone(formatPhone(e.target.value))}
+                minLength={14}
+                required
+              />
+            </label>
+          </div>
           <label className="field">
             <span>Endereço de entrega</span>
             <input value={deliveryAddress} onChange={(e) => setDeliveryAddress(e.target.value)} required />
+          </label>
+          <label className="field">
+            <span>
+              Complemento <small className="muted">(opcional)</small>
+            </span>
+            <input
+              placeholder="Apto, bloco, ponto de referência..."
+              value={deliveryComplement}
+              onChange={(e) => setDeliveryComplement(e.target.value)}
+              maxLength={200}
+            />
           </label>
 
           <fieldset className="items">
@@ -97,12 +128,13 @@ export function NewOrderModal({ onClose, onCreated }: Props) {
                 />
                 <button
                   type="button"
-                  className="btn btn--ghost btn--sm"
+                  className="btn btn--icon btn--danger"
                   aria-label={`Remover item ${index + 1}`}
+                  title="Remover item"
                   disabled={items.length === 1}
                   onClick={() => setItems((prev) => prev.filter((_, i) => i !== index))}
                 >
-                  ✕
+                  <TrashIcon />
                 </button>
               </div>
             ))}
@@ -111,20 +143,21 @@ export function NewOrderModal({ onClose, onCreated }: Props) {
             </button>
           </fieldset>
 
-          <p className="modal__total">
-            Total: <strong>{formatCurrency(total)}</strong>
-          </p>
-
           {error && <div className="alert alert--error" role="alert">{error}</div>}
         </div>
 
-        <div className="modal__actions">
-          <button type="button" className="btn btn--ghost" onClick={onClose} disabled={saving}>
-            Cancelar
-          </button>
-          <button type="submit" className="btn btn--primary" disabled={saving}>
-            {saving ? 'Salvando...' : 'Criar pedido'}
-          </button>
+        <div className="modal__footer">
+          <p className="modal__total">
+            Total <strong>{formatCurrency(total)}</strong>
+          </p>
+          <div className="modal__actions">
+            <button type="button" className="btn btn--ghost" onClick={onClose} disabled={saving}>
+              Cancelar
+            </button>
+            <button type="submit" className="btn btn--primary" disabled={saving}>
+              {saving ? 'Salvando...' : 'Criar pedido'}
+            </button>
+          </div>
         </div>
       </form>
     </div>

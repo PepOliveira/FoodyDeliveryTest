@@ -12,7 +12,9 @@ export interface OrderItem {
 export interface Order {
   id: number
   customerName: string
+  customerPhone: string | null
   deliveryAddress: string
+  deliveryComplement: string | null
   items: OrderItem[]
   status: OrderStatus
   allowedNextStatuses: OrderStatus[]
@@ -23,7 +25,9 @@ export interface Order {
 
 export interface CreateOrderPayload {
   customerName: string
+  customerPhone: string
   deliveryAddress: string
+  deliveryComplement?: string
   items: { name: string; quantity: number; unitPrice: number }[]
 }
 
