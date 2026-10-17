@@ -133,4 +133,21 @@ class OrderControllerTest {
         changeStatus(id, "EM_PREPARO").andExpect(status().isConflict());
         changeStatus(id, "XPTO").andExpect(status().isBadRequest());
     }
+
+    @Test
+    void restoresACancelledOrder() throws Exception {
+        long id = createOrder();
+        changeStatus(id, "CANCELADO").andExpect(status().isOk());
+        changeStatus(id, "RECEBIDO").andExpect(status().isOk()).andExpect(jsonPath("$.status").value("RECEBIDO"));
+    }
+
+    @Test
+    void deliveredOrdersCannotBeChanged() throws Exception {
+        long id = createOrder();
+        changeStatus(id, "EM_PREPARO");
+        changeStatus(id, "SAIU_PARA_ENTREGA");
+        changeStatus(id, "ENTREGUE").andExpect(status().isOk());
+        changeStatus(id, "RECEBIDO").andExpect(status().isConflict());
+        changeStatus(id, "CANCELADO").andExpect(status().isConflict());
+    }
 }

@@ -15,7 +15,8 @@ public enum OrderStatus {
             case RECEBIDO -> EnumSet.of(EM_PREPARO, CANCELADO);
             case EM_PREPARO -> EnumSet.of(SAIU_PARA_ENTREGA, CANCELADO);
             case SAIU_PARA_ENTREGA -> EnumSet.of(ENTREGUE, CANCELADO);
-            case ENTREGUE, CANCELADO -> EnumSet.noneOf(OrderStatus.class);
+            case ENTREGUE -> EnumSet.noneOf(OrderStatus.class);
+            case CANCELADO -> EnumSet.of(RECEBIDO);
         };
     }
 

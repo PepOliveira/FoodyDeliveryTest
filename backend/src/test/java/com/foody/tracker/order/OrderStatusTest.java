@@ -29,9 +29,14 @@ class OrderStatusTest {
         assertThat(status.canTransitionTo(CANCELADO)).isTrue();
     }
 
-    @ParameterizedTest
-    @EnumSource(value = OrderStatus.class, names = {"ENTREGUE", "CANCELADO"})
-    void finalStatusesAreTerminal(OrderStatus status) {
-        assertThat(status.allowedTransitions()).isEmpty();
+    @Test
+    void deliveredIsTerminal() {
+        assertThat(ENTREGUE.allowedTransitions()).isEmpty();
+    }
+
+    @Test
+    void cancelledOrdersCanOnlyBeRestoredToReceived() {
+        assertThat(CANCELADO.allowedTransitions()).containsExactly(RECEBIDO);
+        assertThat(CANCELADO.canTransitionTo(EM_PREPARO)).isFalse();
     }
 }
