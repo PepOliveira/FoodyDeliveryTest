@@ -1,5 +1,5 @@
 import { Outlet } from 'react-router-dom'
-import { useAuth } from '../auth/AuthContext'
+import { useAuth } from '../auth/context'
 import { Logo } from './Logo'
 
 export function AppLayout() {
