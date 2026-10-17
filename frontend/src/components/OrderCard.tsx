@@ -1,6 +1,18 @@
 import type { Order, OrderStatus } from '../api/orders'
-import { FLOW, STATUS_ACTION, STATUS_LABEL, formatCurrency, formatDateTime, orderAgeLabel } from '../utils/order'
-import { ClockIcon, PhoneIcon } from './icons'
+import {
+  FLOW,
+  STATUS_ACTION,
+  WAIT_WARNING_MS,
+  formatCurrency,
+  formatDateTime,
+  formatDuration,
+  formatTime,
+  isInProgress,
+  orderDurationMs,
+  orderWaitMs,
+} from '../utils/order'
+import { whatsappUrl } from '../utils/phone'
+import { ArrowIcon, ClockIcon, PhoneIcon, PinIcon } from './icons'
 import { StatusBadge } from './StatusBadge'
 
 interface Props {
@@ -8,28 +20,59 @@ interface Props {
   now: number
   updating: boolean
   onChangeStatus: (order: Order, status: OrderStatus) => void
+  onCancel: (order: Order) => void
 }
 
-function Progress({ status }: { status: OrderStatus }) {
+function Track({ status }: { status: OrderStatus }) {
   const current = FLOW.indexOf(status)
   return (
-    <ol className="progress" aria-label="Progresso do pedido">
+    <div
+      className="track"
+      role="progressbar"
+      aria-valuemin={1}
+      aria-valuemax={FLOW.length}
+      aria-valuenow={current + 1}
+    >
       {FLOW.map((step, index) => (
-        <li
-          key={step}
-          className={index < current ? 'is-done' : index === current ? 'is-current' : undefined}
-        >
-          <span className="progress__dot" />
-          <span className="progress__label">{STATUS_LABEL[step]}</span>
-        </li>
+        <span key={step} className={index <= current ? 'is-on' : undefined} />
       ))}
-    </ol>
+    </div>
   )
 }
 
-export function OrderCard({ order, now, updating, onChangeStatus }: Props) {
+function OrderTime({ order, now }: { order: Order; now: number }) {
+  if (order.status === 'ENTREGUE') {
+    return (
+      <>
+        <span className="order__age">
+          <ClockIcon />
+          Entregue às {formatTime(order.updatedAt)}
+        </span>
+        <span>Concluído em {formatDuration(orderDurationMs(order))}</span>
+      </>
+    )
+  }
+  if (order.status === 'CANCELADO') {
+    return (
+      <span className="order__age">
+        <ClockIcon />
+        Cancelado às {formatTime(order.updatedAt)}
+      </span>
+    )
+  }
+  const waiting = orderWaitMs(order, now)
+  return (
+    <span className={`order__age${waiting >= WAIT_WARNING_MS ? ' order__age--warn' : ''}`} title={formatDateTime(order.createdAt)}>
+      <ClockIcon />
+      Aberto há {formatDuration(waiting)}
+    </span>
+  )
+}
+
+export function OrderCard({ order, now, updating, onChangeStatus, onCancel }: Props) {
   const cancelled = order.status === 'CANCELADO'
-  const actions = order.allowedNextStatuses
+  const primary = order.allowedNextStatuses.find((s) => s !== 'CANCELADO')
+  const canCancel = order.allowedNextStatuses.includes('CANCELADO')
 
   return (
     <article className={`card order${cancelled ? ' order--cancelled' : ''}`}>
@@ -38,34 +81,40 @@ export function OrderCard({ order, now, updating, onChangeStatus }: Props) {
           <h3>
             Pedido #{order.id} · {order.customerName}
           </h3>
-          <p className="order__meta">
-            <span title={formatDateTime(order.createdAt)}>
-              <ClockIcon />
-              {orderAgeLabel(order, now)}
-            </span>
+          <div className="order__meta">
+            <OrderTime order={order} now={now} />
             {order.customerPhone && (
-              <span>
+              <a
+                className="order__phone"
+                href={whatsappUrl(order.customerPhone)}
+                target="_blank"
+                rel="noreferrer"
+                title="Abrir conversa no WhatsApp"
+              >
                 <PhoneIcon />
                 {order.customerPhone}
-              </span>
+              </a>
             )}
-          </p>
+          </div>
         </div>
         <StatusBadge status={order.status} />
       </header>
 
-      {!cancelled && <Progress status={order.status} />}
+      {isInProgress(order.status) && <Track status={order.status} />}
 
       <p className="order__address">
-        📍 {order.deliveryAddress}
-        {order.deliveryComplement && <span className="order__complement">{order.deliveryComplement}</span>}
+        <PinIcon />
+        <span>
+          {order.deliveryAddress}
+          {order.deliveryComplement && <small>{order.deliveryComplement}</small>}
+        </span>
       </p>
 
       <ul className="order__items">
         {order.items.map((item, i) => (
           <li key={i}>
             <span>
-              {item.quantity}× {item.name}
+              <strong>{item.quantity}×</strong> {item.name}
             </span>
             <span>{formatCurrency(item.subtotal)}</span>
           </li>
@@ -74,21 +123,24 @@ export function OrderCard({ order, now, updating, onChangeStatus }: Props) {
 
       <footer className="order__foot">
         <strong className="order__total">{formatCurrency(order.total)}</strong>
-        {actions.length > 0 && (
-          <div className="order__actions">
-            {actions.map((next) => (
-              <button
-                key={next}
-                type="button"
-                className={`btn btn--sm ${next === 'CANCELADO' ? 'btn--ghost btn--danger' : 'btn--primary'}`}
-                disabled={updating}
-                onClick={() => onChangeStatus(order, next)}
-              >
-                {STATUS_ACTION[next]}
-              </button>
-            ))}
-          </div>
-        )}
+        <div className="order__actions">
+          {canCancel && (
+            <button type="button" className="btn btn--text" disabled={updating} onClick={() => onCancel(order)}>
+              {STATUS_ACTION.CANCELADO}
+            </button>
+          )}
+          {primary && (
+            <button
+              type="button"
+              className={`btn btn--sm ${cancelled ? 'btn--outline' : 'btn--primary'}`}
+              disabled={updating}
+              onClick={() => onChangeStatus(order, primary)}
+            >
+              {STATUS_ACTION[primary]}
+              {!cancelled && <ArrowIcon />}
+            </button>
+          )}
+        </div>
       </footer>
     </article>
   )

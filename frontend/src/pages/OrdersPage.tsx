@@ -1,15 +1,31 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { ordersApi, type Order, type OrderStatus } from '../api/orders'
 import { getErrorMessage } from '../api/client'
+import { ConfirmDialog } from '../components/ConfirmDialog'
 import { LiveIndicator } from '../components/LiveIndicator'
 import { NewOrderModal } from '../components/NewOrderModal'
 import { OrderCard } from '../components/OrderCard'
-import { SearchIcon } from '../components/icons'
+import { PlusIcon, SearchIcon } from '../components/icons'
 import { useNow } from '../hooks/useNow'
-import { STATUS_LABEL } from '../utils/order'
+import { STATUS_LABEL, isInProgress } from '../utils/order'
 
-type Filter = 'TODOS' | OrderStatus
-const FILTERS: Filter[] = ['TODOS', 'RECEBIDO', 'EM_PREPARO', 'SAIU_PARA_ENTREGA', 'ENTREGUE', 'CANCELADO']
+type Filter = 'ANDAMENTO' | OrderStatus | 'TODOS'
+
+const FILTERS: Filter[] = [
+  'ANDAMENTO',
+  'RECEBIDO',
+  'EM_PREPARO',
+  'SAIU_PARA_ENTREGA',
+  'ENTREGUE',
+  'CANCELADO',
+  'TODOS',
+]
+
+const FILTER_LABEL: Record<Filter, string> = {
+  ...STATUS_LABEL,
+  ANDAMENTO: 'Em andamento',
+  TODOS: 'Todos',
+}
 
 const POLL_INTERVAL_MS = 10_000
 const CLOCK_INTERVAL_MS = 30_000
@@ -26,27 +42,24 @@ function matchesSearch(order: Order, query: string): boolean {
   )
 }
 
+function matchesFilter(order: Order, filter: Filter): boolean {
+  if (filter === 'TODOS') return true
+  if (filter === 'ANDAMENTO') return isInProgress(order.status)
+  return order.status === filter
+}
+
+const byOldestFirst = (a: Order, b: Order) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+
 export function OrdersPage() {
   const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [filter, setFilter] = useState<Filter>('TODOS')
+  const [filter, setFilter] = useState<Filter>('ANDAMENTO')
   const [search, setSearch] = useState('')
   const [showForm, setShowForm] = useState(false)
   const [updatingId, setUpdatingId] = useState<number | null>(null)
+  const [cancelTarget, setCancelTarget] = useState<Order | null>(null)
   const now = useNow(CLOCK_INTERVAL_MS)
-
-  const load = useCallback(async () => {
-    setLoading(true)
-    setError(null)
-    try {
-      setOrders(await ordersApi.list())
-    } catch (err) {
-      setError(getErrorMessage(err))
-    } finally {
-      setLoading(false)
-    }
-  }, [])
 
   useEffect(() => {
     let active = true
@@ -74,15 +87,18 @@ export function OrdersPage() {
   const searched = useMemo(() => orders.filter((o) => matchesSearch(o, search)), [orders, search])
 
   const counts = useMemo(() => {
-    const map = new Map<Filter, number>([['TODOS', searched.length]])
-    searched.forEach((o) => map.set(o.status, (map.get(o.status) ?? 0) + 1))
+    const map = new Map<Filter, number>()
+    FILTERS.forEach((f) => map.set(f, searched.filter((o) => matchesFilter(o, f)).length))
     return map
   }, [searched])
 
-  const visible = filter === 'TODOS' ? searched : searched.filter((o) => o.status === filter)
+  const visible = useMemo(() => {
+    const list = searched.filter((o) => matchesFilter(o, filter))
+    const prioritised = filter === 'ANDAMENTO' || (filter !== 'TODOS' && isInProgress(filter))
+    return prioritised ? [...list].sort(byOldestFirst) : list
+  }, [searched, filter])
 
-  async function handleChangeStatus(order: Order, status: OrderStatus) {
-    if (status === 'CANCELADO' && !window.confirm(`Cancelar o pedido #${order.id}?`)) return
+  async function changeStatus(order: Order, status: OrderStatus) {
     setUpdatingId(order.id)
     setError(null)
     try {
@@ -95,9 +111,16 @@ export function OrdersPage() {
     }
   }
 
+  async function confirmCancel() {
+    if (!cancelTarget) return
+    const target = cancelTarget
+    setCancelTarget(null)
+    await changeStatus(target, 'CANCELADO')
+  }
+
   function handleCreated(order: Order) {
     setOrders((prev) => [order, ...prev])
-    setFilter('TODOS')
+    setFilter('ANDAMENTO')
     setShowForm(false)
   }
 
@@ -106,7 +129,9 @@ export function OrdersPage() {
       ? 'Nenhum pedido ainda'
       : search.trim()
         ? 'Nenhum pedido encontrado'
-        : 'Nenhum pedido com esse status'
+        : filter === 'ANDAMENTO'
+          ? 'Nenhum pedido em andamento'
+          : 'Nenhum pedido com esse status'
   const emptyHint =
     orders.length === 0
       ? 'Crie o primeiro pedido para começar o rastreamento.'
@@ -119,14 +144,10 @@ export function OrdersPage() {
           <h1>Pedidos</h1>
           <LiveIndicator />
         </div>
-        <div className="page-head__actions">
-          <button type="button" className="btn btn--ghost" onClick={() => void load()} disabled={loading}>
-            Atualizar
-          </button>
-          <button type="button" className="btn btn--primary" onClick={() => setShowForm(true)}>
-            + Novo pedido
-          </button>
-        </div>
+        <button type="button" className="btn btn--primary" onClick={() => setShowForm(true)}>
+          <PlusIcon />
+          Novo pedido
+        </button>
       </div>
 
       <label className="search">
@@ -150,7 +171,7 @@ export function OrdersPage() {
             className={`chip${filter === f ? ' is-active' : ''}`}
             onClick={() => setFilter(f)}
           >
-            {f === 'TODOS' ? 'Todos' : STATUS_LABEL[f]} <span className="chip__count">{counts.get(f) ?? 0}</span>
+            {FILTER_LABEL[f]} <span className="chip__count">{counts.get(f) ?? 0}</span>
           </button>
         ))}
       </div>
@@ -172,13 +193,25 @@ export function OrdersPage() {
               order={order}
               now={now}
               updating={updatingId === order.id}
-              onChangeStatus={handleChangeStatus}
+              onChangeStatus={changeStatus}
+              onCancel={setCancelTarget}
             />
           ))}
         </div>
       )}
 
       {showForm && <NewOrderModal onClose={() => setShowForm(false)} onCreated={handleCreated} />}
+
+      {cancelTarget && (
+        <ConfirmDialog
+          title={`Cancelar o pedido #${cancelTarget.id}?`}
+          message="O pedido poderá ser restaurado depois, na aba Cancelado."
+          confirmLabel="Sim, cancelar"
+          cancelLabel="Voltar"
+          onConfirm={() => void confirmCancel()}
+          onCancel={() => setCancelTarget(null)}
+        />
+      )}
     </>
   )
 }

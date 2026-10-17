@@ -1,4 +1,4 @@
-import type { OrderStatus } from '../api/orders'
+import type { Order, OrderStatus } from '../api/orders'
 
 export const STATUS_LABEL: Record<OrderStatus, string> = {
   RECEBIDO: 'Recebido',
@@ -9,21 +9,32 @@ export const STATUS_LABEL: Record<OrderStatus, string> = {
 }
 
 export const STATUS_ACTION: Record<OrderStatus, string> = {
-  RECEBIDO: 'Reabrir',
+  RECEBIDO: 'Restaurar pedido',
   EM_PREPARO: 'Iniciar preparo',
-  SAIU_PARA_ENTREGA: 'Saiu para entrega',
+  SAIU_PARA_ENTREGA: 'Enviar para entrega',
   ENTREGUE: 'Marcar como entregue',
-  CANCELADO: 'Cancelar pedido',
+  CANCELADO: 'Cancelar',
 }
 
 export const FLOW: OrderStatus[] = ['RECEBIDO', 'EM_PREPARO', 'SAIU_PARA_ENTREGA', 'ENTREGUE']
 
-const currency = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
-const dateTime = new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' })
+export const IN_PROGRESS: OrderStatus[] = ['RECEBIDO', 'EM_PREPARO', 'SAIU_PARA_ENTREGA']
+
+export const isInProgress = (status: OrderStatus) => IN_PROGRESS.includes(status)
 
 const MINUTE = 60_000
 const HOUR = 60 * MINUTE
 const DAY = 24 * HOUR
+
+export const WAIT_WARNING_MS = 10 * MINUTE
+
+const currency = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' })
+const dateTime = new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' })
+const time = new Intl.DateTimeFormat('pt-BR', { hour: '2-digit', minute: '2-digit' })
+
+export const formatCurrency = (value: number) => currency.format(value)
+export const formatDateTime = (iso: string) => dateTime.format(new Date(iso))
+export const formatTime = (iso: string) => time.format(new Date(iso))
 
 export function formatDuration(ms: number): string {
   const safe = Math.max(ms, 0)
@@ -36,16 +47,7 @@ export function formatDuration(ms: number): string {
   return `${Math.floor(safe / DAY)} d`
 }
 
-const FINAL_STATUSES: OrderStatus[] = ['ENTREGUE', 'CANCELADO']
+export const orderWaitMs = (order: Order, now: number) => now - new Date(order.createdAt).getTime()
 
-export function orderAgeLabel(order: { status: OrderStatus; createdAt: string; updatedAt: string }, now: number): string {
-  const created = new Date(order.createdAt).getTime()
-  if (FINAL_STATUSES.includes(order.status)) {
-    const verb = order.status === 'ENTREGUE' ? 'Entregue' : 'Cancelado'
-    return `${verb} em ${formatDuration(new Date(order.updatedAt).getTime() - created)}`
-  }
-  return `Aberto há ${formatDuration(now - created)}`
-}
-
-export const formatCurrency = (value: number) => currency.format(value)
-export const formatDateTime = (iso: string) => dateTime.format(new Date(iso))
+export const orderDurationMs = (order: Order) =>
+  new Date(order.updatedAt).getTime() - new Date(order.createdAt).getTime()
