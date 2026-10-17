@@ -64,13 +64,8 @@ a:hover {
 
 /* ---------- Logo ---------- */
 .logo {
-  font-size: 1.7rem;
-  font-weight: 800;
-  letter-spacing: -0.04em;
-  color: var(--red);
-}
-.logo__dot {
-  color: var(--coral);
+  display: block;
+  width: auto;
 }
 
 /* ---------- Buttons ---------- */
@@ -190,10 +185,11 @@ select:focus {
   background: linear-gradient(140deg, var(--red) 0%, var(--coral) 100%);
 }
 .auth__hero .logo {
-  color: var(--white);
-}
-.auth__hero .logo__dot {
-  color: var(--ink);
+  align-self: flex-start;
+  padding: 10px 18px;
+  background: var(--white);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
 }
 .auth__hero h2 {
   max-width: 14ch;

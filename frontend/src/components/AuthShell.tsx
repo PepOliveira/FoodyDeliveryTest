@@ -12,7 +12,7 @@ export function AuthShell({ title, subtitle, children, footer }: Props) {
   return (
     <div className="auth">
       <aside className="auth__hero">
-        <Logo />
+        <Logo height={56} />
         <h2>Acompanhe cada entrega em tempo real.</h2>
         <p>Do preparo até a porta do cliente, tudo em um só lugar.</p>
       </aside>
