@@ -1,6 +1,5 @@
 package com.foody.tracker.order;
 
-import com.foody.tracker.common.ConflictException;
 import com.foody.tracker.common.ResourceNotFoundException;
 import com.foody.tracker.order.dto.CreateOrderRequest;
 import com.foody.tracker.order.dto.OrderResponse;
@@ -51,10 +50,6 @@ public class OrderService {
     @Transactional
     public OrderResponse updateStatus(Long id, OrderStatus next) {
         Order order = getOrThrow(id);
-        if (!order.getStatus().canTransitionTo(next)) {
-            throw new ConflictException("Cannot change order status from %s to %s"
-                    .formatted(order.getStatus(), next));
-        }
         order.changeStatus(next);
         return OrderResponse.from(order);
     }

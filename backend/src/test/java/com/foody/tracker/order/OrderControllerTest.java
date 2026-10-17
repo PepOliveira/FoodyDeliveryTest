@@ -136,6 +136,24 @@ class OrderControllerTest {
     }
 
     @Test
+    void recordsEveryStatusChangeInTheHistory() throws Exception {
+        long id = createOrder();
+        mvc.perform(get("/api/orders/" + id).header("Authorization", bearer))
+                .andExpect(jsonPath("$.history.length()").value(1))
+                .andExpect(jsonPath("$.history[0].status").value("RECEBIDO"));
+
+        changeStatus(id, "EM_PREPARO");
+        changeStatus(id, "SAIU_PARA_ENTREGA");
+        changeStatus(id, "ENTREGUE");
+
+        mvc.perform(get("/api/orders/" + id).header("Authorization", bearer))
+                .andExpect(jsonPath("$.history.length()").value(4))
+                .andExpect(jsonPath("$.history[1].status").value("EM_PREPARO"))
+                .andExpect(jsonPath("$.history[3].status").value("ENTREGUE"))
+                .andExpect(jsonPath("$.history[3].changedAt").isNotEmpty());
+    }
+
+    @Test
     void errorsFollowTheProblemDetailFormat() throws Exception {
         mvc.perform(get("/api/orders/999999").header("Authorization", bearer))
                 .andExpect(status().isNotFound())

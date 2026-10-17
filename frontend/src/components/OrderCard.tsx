@@ -2,6 +2,7 @@ import type { Order, OrderStatus } from '../api/orders'
 import {
   FLOW,
   STATUS_ACTION,
+  STATUS_LABEL,
   WAIT_WARNING_MS,
   formatCurrency,
   formatDateTime,
@@ -97,7 +98,10 @@ export function OrderCard({ order, now, updating, onChangeStatus, onCancel }: Pr
             )}
           </div>
         </div>
-        <StatusBadge status={order.status} />
+        <StatusBadge
+          status={order.status}
+          title={order.history.map((h) => `${STATUS_LABEL[h.status]} · ${formatTime(h.changedAt)}`).join('  →  ')}
+        />
       </header>
 
       {isInProgress(order.status) && <Track status={order.status} />}

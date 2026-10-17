@@ -9,6 +9,11 @@ export interface OrderItem {
   subtotal: number
 }
 
+export interface StatusChange {
+  status: OrderStatus
+  changedAt: string
+}
+
 export interface Order {
   id: number
   customerName: string
@@ -19,6 +24,7 @@ export interface Order {
   status: OrderStatus
   allowedNextStatuses: OrderStatus[]
   total: number
+  history: StatusChange[]
   createdAt: string
   updatedAt: string
 }

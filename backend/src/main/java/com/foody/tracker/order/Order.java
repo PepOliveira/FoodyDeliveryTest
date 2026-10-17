@@ -2,6 +2,7 @@ package com.foody.tracker.order;
 
 import com.foody.tracker.user.User;
 import jakarta.persistence.*;
+import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 import lombok.AccessLevel;
@@ -44,6 +45,12 @@ public class Order {
     @Column(nullable = false)
     private OrderStatus status = OrderStatus.RECEBIDO;
 
+    @ElementCollection(fetch = FetchType.LAZY)
+    @CollectionTable(name = "order_status_history", joinColumns = @JoinColumn(name = "order_id"))
+    @OrderBy("changedAt ASC")
+    @BatchSize(size = 50)
+    private List<StatusChange> history = new ArrayList<>();
+
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "created_by")
     private User createdBy;
@@ -62,6 +69,7 @@ public class Order {
         this.deliveryComplement = deliveryComplement;
         this.items = new ArrayList<>(items);
         this.createdBy = createdBy;
+        this.history.add(new StatusChange(this.status, this.createdAt));
     }
 
     public BigDecimal total() {
@@ -69,7 +77,12 @@ public class Order {
     }
 
     public void changeStatus(OrderStatus next) {
+        if (!status.canTransitionTo(next)) {
+            throw new InvalidStatusTransitionException(status, next);
+        }
+        Instant now = Instant.now();
         this.status = next;
-        this.updatedAt = Instant.now();
+        this.updatedAt = now;
+        this.history.add(new StatusChange(next, now));
     }
 }

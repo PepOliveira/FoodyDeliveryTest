@@ -3,6 +3,7 @@ package com.foody.tracker.order.dto;
 import com.foody.tracker.order.Order;
 import com.foody.tracker.order.OrderItem;
 import com.foody.tracker.order.OrderStatus;
+import com.foody.tracker.order.StatusChange;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -19,6 +20,7 @@ public record OrderResponse(
         OrderStatus status,
         Set<OrderStatus> allowedNextStatuses,
         BigDecimal total,
+        List<StatusChangeResponse> history,
         Instant createdAt,
         Instant updatedAt
 ) {
@@ -34,8 +36,15 @@ public record OrderResponse(
                 order.getStatus(),
                 order.getStatus().allowedTransitions(),
                 order.total(),
+                order.getHistory().stream().map(StatusChangeResponse::from).toList(),
                 order.getCreatedAt(),
                 order.getUpdatedAt());
+    }
+
+    public record StatusChangeResponse(OrderStatus status, Instant changedAt) {
+        static StatusChangeResponse from(StatusChange change) {
+            return new StatusChangeResponse(change.getStatus(), change.getChangedAt());
+        }
     }
 
     public record ItemResponse(String name, int quantity, BigDecimal unitPrice, BigDecimal subtotal) {
